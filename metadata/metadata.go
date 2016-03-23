@@ -1,4 +1,4 @@
-package packer
+package metadata
 
 import (
 	"bytes"
@@ -18,7 +18,7 @@ import (
 	"github.com/chop-dbhi/data-models-service/client"
 )
 
-const dataModelsService = "http://data-models.origins.link"
+const dataModelsService = "http://data-models-service.research.chop.edu"
 
 // Default *ordered* header.
 var canonicalHeader = []string{

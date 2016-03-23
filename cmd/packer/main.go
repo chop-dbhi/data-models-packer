@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/chop-dbhi/data-models-packer"
+	"github.com/chop-dbhi/data-models-packer/metadata"
 
 	"log"
 	"os"
@@ -14,7 +15,7 @@ import (
 func main() {
 
 	var (
-		cfg        = new(packer.Config)
+		cfg        = new(metadata.Config)
 		out        string
 		verifyOnly bool
 		inputs     []string
@@ -63,7 +64,7 @@ func main() {
 		}
 
 		// Verify the metadata file.
-		if err = packer.CreateOrVerifyMetadataFile(cfg, true); err != nil {
+		if err = metadata.CreateOrVerifyMetadataFile(cfg, true); err != nil {
 			log.Fatalf("packer: error verifying metadata file: %s", err)
 		}
 
@@ -75,7 +76,7 @@ func main() {
 		var inputIsDir bool
 
 		// Determine if input path is a directory.
-		if inputIsDir, err = packer.IsDir(inputs[0]); err != nil {
+		if inputIsDir, err = metadata.IsDir(inputs[0]); err != nil {
 			log.Fatalf("packer: error inspecting input path: %s", err)
 		}
 
@@ -90,7 +91,7 @@ func main() {
 			}
 
 			// Create or verify the metadata file.
-			if err = packer.CreateOrVerifyMetadataFile(cfg, verifyOnly); err != nil {
+			if err = metadata.CreateOrVerifyMetadataFile(cfg, verifyOnly); err != nil {
 				log.Fatalf("packer: error creating or verifying metadata file: %s", err)
 			}
 
@@ -140,7 +141,7 @@ func main() {
 		}
 
 		// Verify the metadata file.
-		if err = packer.CreateOrVerifyMetadataFile(cfg, true); err != nil {
+		if err = metadata.CreateOrVerifyMetadataFile(cfg, true); err != nil {
 			log.Fatalf("packer: error verifying metadata file: %s", err)
 		}
 
