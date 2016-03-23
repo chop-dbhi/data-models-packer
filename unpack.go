@@ -15,7 +15,6 @@ import (
 	"io"
 	"io/ioutil"
 
-	"github.com/chop-dbhi/data-models-packer/metadata"
 	"golang.org/x/crypto/openpgp"
 )
 
@@ -31,7 +30,7 @@ type PackageReader struct {
 // NewPackageReader takes an input file path (it will read from STDIN if this
 // is an empty string) and a Config object and returns a properly configured
 // PackageReader that is ready to use.
-func NewPackageReader(cfg *metadata.Config) (*PackageReader, error) {
+func NewPackageReader(cfg *Config) (*PackageReader, error) {
 
 	var (
 		r   = new(PackageReader)
@@ -93,7 +92,7 @@ func (r *PackageReader) Close() error {
 
 // makeDecryptingReader creates a decrypting reader based on the passed reader
 // using the passed config and returns an io.ReadCloser to read from and close.
-func makeDecryptingReader(reader io.Reader, cfg *metadata.Config) (io.Reader, error) {
+func makeDecryptingReader(reader io.Reader, cfg *Config) (io.Reader, error) {
 
 	var (
 		keyReader        *os.File

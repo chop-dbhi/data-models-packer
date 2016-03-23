@@ -15,23 +15,24 @@ import (
 func main() {
 
 	var (
-		cfg        = new(metadata.Config)
+		mdCfg      = new(metadata.Config)
+		pCfg       = new(packer.Config)
 		out        string
 		verifyOnly bool
 		inputs     []string
 		err        error
 	)
 
-	flag.StringVar(&cfg.Comp, "comp", "", "The compression method to be used: '.zip', '.tar.gz', '.tar.gzip', '.tar.bz2', or '.tar.bzip2'. If omitted, the '.tar.gz' method will be used for packing and the file extension will be used to infer a method for unpacking or the STDIN stream is assumed to be uncompressed.")
-	flag.StringVar(&cfg.DataVersion, "dataVersion", "", "The specific version of the data in the package.")
-	flag.StringVar(&cfg.Etl, "etl", "", "The URL of the ETL code used to generate data. Should be specific to the version of code used and remain that way over time.")
-	flag.StringVar(&cfg.KeyPassPath, "keyPassPath", "", "The filepath to the file containing the passphrase needed to access the private key. If omitted, the 'PACKER_KEYPASS' environment variable will be used, if that is unset, the private key is assumed to be unprotected.")
-	flag.StringVar(&cfg.KeyPath, "keyPath", "", "The filepath to the public key to use for encrypting packaged data or to the private key to use for unpacking encrypted data. If omitted, the data is assumed to be unencrypted.")
-	flag.StringVar(&cfg.Model, "model", "", "The data model to operate against.")
-	flag.StringVar(&cfg.ModelVersion, "modelVersion", "", "The specific version of the model to operate against. Defaults to the latest version of the model.")
+	flag.StringVar(&pCfg.Comp, "comp", "", "The compression method to be used: '.zip', '.tar.gz', '.tar.gzip', '.tar.bz2', or '.tar.bzip2'. If omitted, the '.tar.gz' method will be used for packing and the file extension will be used to infer a method for unpacking or the STDIN stream is assumed to be uncompressed.")
+	flag.StringVar(&mdCfg.DataVersion, "dataVersion", "", "The specific version of the data in the package.")
+	flag.StringVar(&mdCfg.Etl, "etl", "", "The URL of the ETL code used to generate data. Should be specific to the version of code used and remain that way over time.")
+	flag.StringVar(&pCfg.KeyPassPath, "keyPassPath", "", "The filepath to the file containing the passphrase needed to access the private key. If omitted, the 'PACKER_KEYPASS' environment variable will be used, if that is unset, the private key is assumed to be unprotected.")
+	flag.StringVar(&pCfg.KeyPath, "keyPath", "", "The filepath to the public key to use for encrypting packaged data or to the private key to use for unpacking encrypted data. If omitted, the data is assumed to be unencrypted.")
+	flag.StringVar(&mdCfg.Model, "model", "", "The data model to operate against.")
+	flag.StringVar(&mdCfg.ModelVersion, "modelVersion", "", "The specific version of the model to operate against. Defaults to the latest version of the model.")
 	flag.StringVar(&out, "out", "", "The directory or filename that should be written to. If omitted, data will be unpacked into the current directory or packed onto STDOUT.")
-	flag.StringVar(&cfg.Service, "service", "", "The URL of the data models service to use for fetching schema information.")
-	flag.StringVar(&cfg.Site, "site", "", "The site that generated the data.")
+	flag.StringVar(&mdCfg.Service, "service", "", "The URL of the data models service to use for fetching schema information.")
+	flag.StringVar(&mdCfg.Site, "site", "", "The site that generated the data.")
 	flag.BoolVar(&verifyOnly, "verifyOnly", false, "Only verify an existing 'metadata.csv' file in the given data directory. Do not package the directory.")
 
 	flag.Parse()
@@ -42,17 +43,18 @@ func main() {
 	// Input is from STDIN. Unpack it.
 	case 0:
 
-		// Update config with proper command line arguments.
-		cfg.DataDirPath = out
-		cfg.PackagePath = ""
-		if err = cfg.Verify(); err != nil {
+		// Update configs with proper command line arguments.
+		mdCfg.DataDirPath = out
+		pCfg.DataDirPath = out
+		pCfg.PackagePath = ""
+		if err = pCfg.Verify(); err != nil {
 			log.Fatalf("packer: configuration error: %s", err)
 		}
 
 		// Create package reader.
 		var packageReader *packer.PackageReader
 
-		if packageReader, err = packer.NewPackageReader(cfg); err != nil {
+		if packageReader, err = packer.NewPackageReader(pCfg); err != nil {
 			log.Fatalf("packer: error creating unpacking writer: %s", err)
 		}
 
@@ -64,7 +66,7 @@ func main() {
 		}
 
 		// Verify the metadata file.
-		if err = metadata.CreateOrVerifyMetadataFile(cfg, true); err != nil {
+		if err = metadata.CreateOrVerifyMetadataFile(mdCfg, true); err != nil {
 			log.Fatalf("packer: error verifying metadata file: %s", err)
 		}
 
@@ -76,7 +78,7 @@ func main() {
 		var inputIsDir bool
 
 		// Determine if input path is a directory.
-		if inputIsDir, err = metadata.IsDir(inputs[0]); err != nil {
+		if inputIsDir, err = packer.IsDir(inputs[0]); err != nil {
 			log.Fatalf("packer: error inspecting input path: %s", err)
 		}
 
@@ -84,14 +86,15 @@ func main() {
 		if inputIsDir {
 
 			// Update config with proper command line arguments.
-			cfg.DataDirPath = inputs[0]
-			cfg.PackagePath = out
-			if err = cfg.Verify(); err != nil {
+			mdCfg.DataDirPath = inputs[0]
+			pCfg.DataDirPath = inputs[0]
+			pCfg.PackagePath = out
+			if err = pCfg.Verify(); err != nil {
 				log.Fatalf("packer: configuration error: %s", err)
 			}
 
 			// Create or verify the metadata file.
-			if err = metadata.CreateOrVerifyMetadataFile(cfg, verifyOnly); err != nil {
+			if err = metadata.CreateOrVerifyMetadataFile(mdCfg, verifyOnly); err != nil {
 				log.Fatalf("packer: error creating or verifying metadata file: %s", err)
 			}
 
@@ -103,7 +106,7 @@ func main() {
 			// Create package writer.
 			var packageWriter *packer.PackageWriter
 
-			if packageWriter, err = packer.NewPackageWriter(cfg); err != nil {
+			if packageWriter, err = packer.NewPackageWriter(pCfg); err != nil {
 				log.Fatalf("packer: error creating package writer: %s", err)
 			}
 
@@ -120,16 +123,17 @@ func main() {
 		// Input path is a file. Unpack it.
 
 		// Update config with proper command line arguments.
-		cfg.DataDirPath = out
-		cfg.PackagePath = inputs[0]
-		if err = cfg.Verify(); err != nil {
+		mdCfg.DataDirPath = out
+		pCfg.DataDirPath = out
+		pCfg.PackagePath = inputs[0]
+		if err = pCfg.Verify(); err != nil {
 			log.Fatalf("packer: configuration error: %s", err)
 		}
 
 		// Create package reader
 		var packageReader *packer.PackageReader
 
-		if packageReader, err = packer.NewPackageReader(cfg); err != nil {
+		if packageReader, err = packer.NewPackageReader(pCfg); err != nil {
 			log.Fatalf("packer: error creating unpacking writer: %s", err)
 		}
 
@@ -141,7 +145,7 @@ func main() {
 		}
 
 		// Verify the metadata file.
-		if err = metadata.CreateOrVerifyMetadataFile(cfg, true); err != nil {
+		if err = metadata.CreateOrVerifyMetadataFile(mdCfg, true); err != nil {
 			log.Fatalf("packer: error verifying metadata file: %s", err)
 		}
 

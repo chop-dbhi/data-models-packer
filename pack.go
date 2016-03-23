@@ -12,7 +12,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/chop-dbhi/data-models-packer/metadata"
 	"golang.org/x/crypto/openpgp"
 )
 
@@ -27,7 +26,7 @@ type PackageWriter struct {
 
 // NewPackageWriter takes a Config object and returns a properly configured
 // PackageWriter that is ready to use.
-func NewPackageWriter(cfg *metadata.Config) (*PackageWriter, error) {
+func NewPackageWriter(cfg *Config) (*PackageWriter, error) {
 
 	var (
 		w   = new(PackageWriter)
