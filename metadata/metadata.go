@@ -109,7 +109,7 @@ func CreateOrVerifyMetadataFile(cfg *Config, verifyOnly bool) error {
 // directory.
 type Metadata struct {
 	header       []string
-	recordMaps   []map[string]string
+	RecordMaps   []map[string]string
 	path         string
 	site         string
 	model        string
@@ -308,7 +308,7 @@ func (m *Metadata) readData(r io.Reader) (err error) {
 
 		// Create map of header values to record values.
 		recordMap := make(map[string]string)
-		m.recordMaps = append(m.recordMaps, recordMap)
+		m.RecordMaps = append(m.RecordMaps, recordMap)
 
 		for i, val := range record {
 			if m.header[i] == "organization" || m.header[i] == "filename" || m.header[i] == "etl" {
@@ -337,7 +337,7 @@ func (m *Metadata) Check(r io.Reader) (err error) {
 	}
 
 	// Validate records values, except for checksums.
-	for _, recordMap := range m.recordMaps {
+	for _, recordMap := range m.RecordMaps {
 
 		var (
 			mFound bool
@@ -420,7 +420,7 @@ func (m *Metadata) Check(r io.Reader) (err error) {
 	}
 
 	// Validate record checksums.
-	for _, recordMap := range m.recordMaps {
+	for _, recordMap := range m.RecordMaps {
 
 		var (
 			dataFile  *os.File
