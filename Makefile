@@ -32,10 +32,17 @@ dist-build:
 		-arch="amd64" \
 		./cmd/packer > /dev/null
 
+	gox -output="dist/{{.OS}}-{{.Arch}}/data-models-packer" \
+		-ldflags "-X packer.progBuild='$(GIT_SHA)'" \
+		-os="windows" \
+		-arch="386" \
+		./cmd/packer > /dev/null
+
 dist-zip:
 	cd dist && zip data-models-packer-linux-amd64.zip linux-amd64/*
 	cd dist && zip data-models-packer-windows-amd64.zip windows-amd64/*
 	cd dist && zip data-models-packer-darwin-amd64.zip darwin-amd64/*
+	cd dist && zip data-models-packer-windows-386.zip windows-386/*
 
 dist: dist-build dist-zip
 
